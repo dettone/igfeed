@@ -1,0 +1,18 @@
+.avatarWithBorder{
+    width: 3rem;
+    height: 3rem;
+    border-radius: 8px;
+    border: 4px solid var(--gray-800);
+    outline: 2px solid var(--green-500);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+
+.avatarWithNoBorder{
+    width: 3rem;
+    height: 3rem;
+    border-radius: 8px;
+}

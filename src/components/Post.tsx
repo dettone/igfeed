@@ -1,56 +1,134 @@
 import { Avatar } from "./Avatar";
 import { Comment } from "./Comment";
 import styles from "./Post.module.css";
-export function Post() {
+import { format, formatDistanceToNow } from "date-fns";
+import ptBR from "date-fns/locale/pt-BR";
+import { useEffect, useState } from "react";
+interface Post {
+  id: number;
+  author: {
+    avatarUrl: string;
+    name: string;
+    role: string;
+  };
+  content: {
+    type: string;
+    content: string;
+  }[];
+  publishedAt: Date;
+}
+[];
+
+interface Comment {
+  id: number;
+  text: string;
+  date: Date;
+}
+
+export function Post({ id, author, content, publishedAt }: Post) {
+  const [comments, setComment] = useState<Comment[]>([]);
+
+  const [newCommentPost, setNewCommentPost] = useState<string>("");
+
+  function handleNewCommentChange() {
+    event.target?.setCustomValidity('');
+    const commentTarget = event.target as HTMLInputElement;
+    setNewCommentPost(commentTarget.value);
+  }
+
+  function handleNewCommentInvalid(){
+    event.target?.setCustomValidity('Por favor, digite um comentário válido');
+  }
+
+
+  function handleCreateNewComment() {
+    event.preventDefault();
+    setComment([
+      ...comments,
+      { id: Math.random(), text: newCommentPost, date: new Date() },
+    ]);
+    setNewCommentPost("");
+  }
+
+  function deleteComment(commentToDelete: string) {
+    const commentsWithoutDeletedOne = comments.filter(
+      (comment) => comment.text !== commentToDelete
+    );
+    setComment(commentsWithoutDeletedOne);
+  }
+
+
+
+  const publishedDateFormat = format(publishedAt, "d 'de' LLLL 'às' HH:mm'h'", {
+    locale: ptBR,
+  });
+
+  const publishedDateRelativeToNow = formatDistanceToNow(publishedAt, {
+    locale: ptBR,
+    addSuffix: true,
+  });
+
+  const isNewCommentEmpty = newCommentPost.length === 0;
+  
   return (
     <article className={styles.post}>
       <header>
         <div className={styles.author}>
-        <Avatar  src = {"https://avatars.githubusercontent.com/u/32111175?v="} />
+          <Avatar src={author.avatarUrl} />
           <div className={styles.authorInfo}>
-            <strong> João Vitor Dettoni</strong>
-            <span> Web Developer</span>
+            <strong> {author.name}</strong>
+            <span> {author.role}</span>
           </div>
         </div>
 
-        <time
-          title="19 de julho de 2022 ás 10 e 40"
-          dateTime="2022-07-19 10:40:00"
-        >
+        <time title={publishedDateFormat} dateTime={publishedAt.toISOString()}>
           {" "}
-          Publicado há 1h
+          {publishedDateRelativeToNow}
         </time>
       </header>
 
       <div className={styles.content}>
-        <p>
-          Acelere sua carreira em programação e especialize-se nas tecnologias
-        </p>
-        <p>mais modernas Evolua através de um método eficiente, uma grade</p>
-        <p>
-          curricular alinhada com o mercado e as atitudes que vão te destacar
-          como
-        </p>
-        <p>profissional.</p>
-        <p>
-          {" "}
-          <a href="#">Clique aqui e veja as novidades</a>
-        </p>
+        <div className={styles.content}>
+          {content.map((content) => {
+            if (content.type === "paragraph") {
+              return <p key={content.content}>{content.content}</p>;
+            } else if (content.type === "link") {
+              return (
+                <p key={content.content}>
+                  <a href={content.content}>{content.content}</a>
+                </p>
+              );
+            }
+          })}
+        </div>
       </div>
-      <form className={styles.commentForm}>
+      <form onSubmit={handleCreateNewComment} className={styles.commentForm}>
         <strong> Deixe seu feedback</strong>
-        <textarea placeholder="Deixe seu comentário"/>
-
-      <footer>
-      <button type="submit">Comentar</button>
-        </footer> 
+        <textarea
+          placeholder="Deixe seu comentário"
+          name="comment"
+          onChange={handleNewCommentChange}
+          value={newCommentPost}
+          onInvalid={handleNewCommentInvalid}
+          required
+        />
+        <footer>
+          <button type="submit" disabled={isNewCommentEmpty}>Comentar</button>
+        </footer>
       </form>
 
       <div className={styles.commentList}>
-        <Comment />
-        <Comment />
-        <Comment />
-        </div>
+        {comments.map((comment) => {
+          return (
+            <Comment
+              key={comment.id}
+              commentText={comment.text}
+              commentDatedAt={comment.date}
+              onDeleteComment={deleteComment}
+            />
+          );
+        })}
+      </div>
     </article>
   );
 }
